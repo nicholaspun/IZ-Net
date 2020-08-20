@@ -1,1 +1,1 @@
-# IZ-Net
+# IZ*Net
