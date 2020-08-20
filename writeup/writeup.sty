@@ -1,0 +1,97 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{writeup}[2020/08/19 IZNet Writeup]
+
+% Packages
+\RequirePackage[T1]{fontenc}
+\RequirePackage{lmodern}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{graphicx}
+\RequirePackage{amsmath, amssymb, amsthm}
+\RequirePackage{mathtools}
+\RequirePackage{listings}
+\RequirePackage{hyperref}
+\RequirePackage[margin=1in]{geometry}
+\RequirePackage{enumitem}
+\RequirePackage{parskip}
+\RequirePackage{xcolor}
+\RequirePackage[ruled, vlined]{algorithm2e}
+\RequirePackage{cleveref}
+\RequirePackage{tocloft}
+
+% Make own title
+\makeatletter
+\renewcommand{\maketitle}{
+    \begin{center}
+        {\Large \@title} \\
+        \vspace{3mm}
+        {\large \@author}
+    \end{center}
+}
+\makeatother
+
+% Page numbering
+\usepackage{fancyhdr, lastpage}
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\cfoot{}
+\rfoot{{\small Page \thepage\ /\ \pageref*{LastPage}}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Math
+\DeclareMathOperator{\bigO}{\mathcal{O}}
+\DeclareMathOperator{\Z}{\mathbb{Z}} % Integers
+\DeclareMathOperator{\N}{\mathbb{N}} % Naturals
+\DeclareMathOperator{\Q}{\mathbb{Q}} % Rationals
+\DeclareMathOperator{\F}{\mathbb{F}} % Field
+
+% Theorems
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{claim}{Claim}
+
+\theoremstyle{definition}
+\newtheorem{example}{Example}
+\newtheorem*{remark}{Remark}
+
+\RequirePackage{caption}
+% \DeclareCaptionFont{white}{\color{white}}
+% \DeclareCaptionFormat{listing}{\colorbox[cmyk]{0.43, 0.35, 0.35,0.01}{\parbox{\textwidth}{\hspace{15pt}#1#2#3}}}
+\captionsetup[lstlisting]{font=bf}
+
+% Algorithm2e keywords
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwOutput}{Output}
+
+% Algorithm2e Settings
+\setlength{\algomargin}{1em}
+
+% Aliases
+\renewcommand{\it}{\textit}
+\renewcommand{\bf}{\textbf}
+\newcommand{\ul}{\underline}
+
+% ToC
+\renewcommand{\cfttoctitlefont}{\normalfont\Large}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecfont}{\normalfont}
+\renewcommand{\cftsecpagefont}{\normalfont}
+
+% List of Mysteries
+\newcommand{\listmysteryname}{List of Mysteries}
+\newlistof[section]{mystery}{mys}{\listmysteryname}
+\newenvironment{mystery}[1]{
+    \refstepcounter{mystery}
+    \par\noindent
+    \textbf{Mystery \themystery:}
+    \textit{\ifx\newenvironment#1\newenvironment\else(#1)\fi}
+    \addcontentsline{mys}{mystery}{
+        \protect\numberline{\themystery}\space#1
+    }
+    \par    
+}{}
+\renewcommand{\cftmystitlefont}{\normalfont\Large}
+
