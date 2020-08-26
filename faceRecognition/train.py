@@ -5,7 +5,6 @@ from keras.layers import Dense, Input, Layer, Lambda
 
 from util import get_pairs, get_triplets
 
-
 # Taken from https://github.com/CrimyTheBold/tripletloss/blob/master/02%20-%20tripletloss%20MNIST.ipynb
 class TripletLossLayer(Layer):
     def __init__(self, alpha=0.2, **kwargs):

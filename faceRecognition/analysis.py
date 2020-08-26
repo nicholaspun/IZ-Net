@@ -5,22 +5,24 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 
 from consts import ALL_MEMBERS, FACES_PATH
-from util import load_img
+import util
 
 class Analysis:
     def __init__(self, model):
         print("Intializing Analysis class ... ")
         self.embeddings = self.__get_embeddings(model)
+        self.medoids_index = {}
         print("Intialization Complete.")
 
     def __get_embeddings(self, model):
         embeddings = {}
 
         for member in ALL_MEMBERS:
+            print('Calculating embeddings for {} ...'.format(member))
             embeddings[member] = []
             for image_name in os.listdir(os.path.join(FACES_PATH, member)):
                 embeddings[member].append(
-                    np.squeeze(model(load_img(os.path.join(FACES_PATH, member, image_name)))))
+                    np.squeeze(model(util.load_img(os.path.join(FACES_PATH, member, image_name)))))
 
         return embeddings
             
@@ -55,14 +57,8 @@ class Analysis:
             plt.scatter(x_coords, y_coords, c=colors[index], label=member)
 
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
         plt.show()
-
-    def __pairwise_distances(self, embeddings):
-        gram = np.matmul(embeddings, np.transpose(embeddings))
-        norms = np.diag(gram)
-        dist_mat = np.expand_dims(norms, 0) - 2.0 * gram + np.expand_dims(norms, 1)
-        return list(dist_mat[np.triu_indices(len(embeddings), 1)])
 
     def visualize_pairwise_distance_boxplot(self, save_path):
         distances = []
@@ -70,11 +66,54 @@ class Analysis:
         for member, member_embeddings in self.embeddings.items():
             print("Calculating pairwise distance for {}".format(member))
             member_ordering.append(member)
-            distances.append(self.__pairwise_distances(member_embeddings))
+            pairwise_distance_matrix = util.compute_pairwise_distance_matrix(member_embeddings)
+            distances.append(
+                list(pairwise_distance_matrix[np.triu_indices(len(member_embeddings), 1)]))
+
+            if member not in self.medoids_index:
+                medoid_embedding_index = np.argmin(np.sum(pairwise_distance_matrix, axis=1))
+                self.medoids_index[member] = medoid_embedding_index
         
         plt.figure(figsize=(10, 10))
         plt.boxplot(distances)
         plt.ylabel("Pairwise Distance (Euclidean)")
         plt.xticks(np.arange(1, len(member_ordering) + 1), member_ordering)
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight')
         plt.show()
+
+    def visualize_medoids_table(self, save_path):
+        for member in ALL_MEMBERS:
+            if member not in self.medoids_index:
+                pairwise_distance_matrix = util.compute_pairwise_distance_matrix(self.embeddings[member])
+                medoid_embedding_index = np.argmin(np.sum(pairwise_distance_matrix, axis=1))
+                self.medoids_index[member] = medoid_embedding_index
+        
+        member_order = []
+        medoid_matrix = []
+        for member, member_medoid_embedding_index in self.medoids_index.items():
+            member_order.append(member)
+            medoid_matrix.append(
+                self.embeddings[member][member_medoid_embedding_index])
+        
+        medoid_pairwise_distance_mat = util.compute_pairwise_distance_matrix(medoid_matrix)
+
+        plt.figure(figsize=(20, 5))
+
+        ax = plt.gca()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        plt.box(on=None)
+
+        the_table = plt.table(
+            cellText=medoid_pairwise_distance_mat,
+            rowLabels=member_order,
+            colLabels=member_order,
+            loc='center',
+            rowLoc='right',
+            colLoc='center'
+        )
+        the_table.scale(1, 1.5)
+        plt.tight_layout()
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.show()
+
