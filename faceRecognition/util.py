@@ -1,9 +1,89 @@
 import cv2
+import functools
 import numpy as np
 import os
 import random
+import time
 
 from consts import ALL_MEMBERS, FACES_PATH
+from Distribution import Distribution
+from IntervalTree import IntervalTree
+
+def countPairs(imgs):
+    return len(imgs) * (len(imgs) - 1) * 0.5
+
+class TripletPickerHelper:
+    def __init__(self):
+        imageDistribution = [countPairs(os.listdir(os.path.join(FACES_PATH, member))) for member in ALL_MEMBERS]
+        memberProbabilities = Distribution.normalizeDistribution(imageDistribution)
+        memberIntervals = Distribution.distributionToIntervals(memberProbabilities)
+
+        self.memberIntervalTree = IntervalTree.createIntervalTreeFromIntervals(memberIntervals, ALL_MEMBERS)
+        self.memberPaths = { 
+            member: [os.path.join(FACES_PATH, member, imgName) for imgName in os.listdir(os.path.join(FACES_PATH, member))] 
+            for member in ALL_MEMBERS }
+        self.allPaths = set([imgPath for member, imgPaths in self.memberPaths.items() for imgPath in imgPaths])
+        self.memberPathsComplements = { member: self.allPaths - set(self.memberPaths[member]) for member in ALL_MEMBERS }
+
+    def chooseTriplets(self, amount):
+        anchors = []
+        positives = []
+        negatives = []
+
+        for _ in range(amount):
+            memberAnchor = self.memberIntervalTree.find(random.random())
+            memberAnchorSamples = random.sample(self.memberPaths[memberAnchor], k=2)
+            anchors.append(memberAnchorSamples[0])
+            positives.append(memberAnchorSamples[1])
+            negatives.append(random.sample(self.memberPathsComplements[memberAnchor], k=1)[0])
+
+        return anchors, positives, negatives
+
+add = lambda x, y: x + y
+
+class PairPickerHelper:
+    def __init__(self):
+        positivePairsDistribution = [countPairs(os.listdir(os.path.join(FACES_PATH, member))) for member in ALL_MEMBERS]
+        positivePairProbabilities = Distribution.normalizeDistribution(positivePairsDistribution)
+        positivePairIntervals = Distribution.distributionToIntervals(positivePairProbabilities)
+
+        totalImages = functools.reduce(add, [len(os.listdir(os.path.join(FACES_PATH, member))) for member in ALL_MEMBERS])
+        negativePairsDistribution = []
+        for member in ALL_MEMBERS:
+            numMemberImages = len(os.listdir(os.path.join(FACES_PATH, member)))
+            negativePairsDistribution.append((totalImages -numMemberImages) * numMemberImages * 2)
+        negativePairsProbabilities = Distribution.normalizeDistribution(negativePairsDistribution)
+        negativePairsIntervals = Distribution.distributionToIntervals(negativePairsProbabilities)
+
+        self.positivePairsIntervalTree = IntervalTree.createIntervalTreeFromIntervals(positivePairIntervals, ALL_MEMBERS)
+        self.negativePairsIntervalTree = IntervalTree.createIntervalTreeFromIntervals(negativePairsIntervals, ALL_MEMBERS)
+        self.memberPaths = {
+            member: [os.path.join(FACES_PATH, member, imgName) for imgName in os.listdir(os.path.join(FACES_PATH, member))]
+            for member in ALL_MEMBERS }
+        self.allPaths = set([imgPath for member, imgPaths in self.memberPaths.items() for imgPath in imgPaths])
+        self.memberPathsComplements = { member: self.allPaths - set(self.memberPaths[member]) for member in ALL_MEMBERS }
+
+    def choosePositivePairs(self, amount):
+        pairs = []
+        for _ in range(amount):
+            member = self.positivePairsIntervalTree.find(random.random())
+            memberSamples = random.sample(self.memberPaths[member], k = 2)
+            pairs.append((memberSamples[0], memberSamples[1]))
+        
+        return pairs
+
+    def chooseNegativePairs(self, amount):
+        pairs = []
+        for _ in range(amount):
+            firstMember = self.negativePairsIntervalTree.find(random.random())
+            firstMemberSample = random.sample(self.memberPaths[firstMember], k = 1)[0]
+            secondMemberSample = random.sample(self.memberPathsComplements[firstMember], k = 1)[0]
+            pairs.append((firstMemberSample, secondMemberSample))
+
+        return pairs
+        
+TRIPLET_PICKER_HELPER = TripletPickerHelper()
+PAIR_PICKER_HELPER = PairPickerHelper()
 
 def load_img(img_path):
     img = cv2.imread(img_path)
@@ -18,99 +98,60 @@ def compute_pairwise_distance_matrix(embeddings):
     dist_mat = np.expand_dims(norms, 0) - 2.0 * gram + np.expand_dims(norms, 1)
     return dist_mat
 
-def compute_pairwise_distance_matrix_between_2_sets_of_embeddings(embeddings_1, embeddings_2):
-    norms_1 = np.diag(np.matmul(embeddings_1, np.transpose(embeddings_1)))
-    norms_2 = np.diag(np.matmul(embeddings_2, np.transpose(embeddings_2)))
-    dot_product_mat = np.matmul(embeddings_1, np.transpose(embeddings_2))
-    return np.expand_dims(norms_1, 1) - 2 * dot_product_mat + np.expand_dims(norms_2, 0)
+# def compute_pairwise_distance_matrix_between_2_sets_of_embeddings(embeddings_1, embeddings_2):
+#     norms_1 = np.diag(np.matmul(embeddings_1, np.transpose(embeddings_1)))
+#     norms_2 = np.diag(np.matmul(embeddings_2, np.transpose(embeddings_2)))
+#     dot_product_mat = np.matmul(embeddings_1, np.transpose(embeddings_2))
+#     return np.expand_dims(norms_1, 1) - 2 * dot_product_mat + np.expand_dims(norms_2, 0)
+
+def compute_distances_between_embeddings(e1, e2):
+    norms1 = np.diag(np.matmul(e1, np.transpose(e1)))
+    norms2 = np.diag(np.matmul(e2, np.transpose(e2)))
+    dotprd = np.diag(np.matmul(e1, np.transpose(e2)))
+    return norms1 + norms2 - 2 * dotprd
 
 def get_triplets(num, network, alpha=0.2):
+    print("Grabbing triplets ...")
     anchor = np.empty((0, 224, 224, 3))
     positive = np.empty((0, 224, 224, 3))
     negative = np.empty((0, 224, 224, 3))
-    original_num = num
 
     while num > 0:
-        member1, member2 = random.sample(ALL_MEMBERS, k=2)
+        print("{} triplets to go ... ".format(num))
+        anchorPaths, positivePaths, negativePaths = TRIPLET_PICKER_HELPER.chooseTriplets(128)
 
-        pos_img_names = os.listdir(os.path.join(FACES_PATH, member1))
-        random.shuffle(pos_img_names) # eck, mutation
-        pos_img_names = pos_img_names[:original_num] # So the computation isn't as heavy
+        embeddings_anc = [np.squeeze(network(load_img(path))) for path in anchorPaths]
+        embeddings_pos = [np.squeeze(network(load_img(path))) for path in positivePaths]
+        embeddings_neg = [np.squeeze(network(load_img(path))) for path in negativePaths]
 
-        neg_img_names = os.listdir(os.path.join(FACES_PATH, member2))
-        random.shuffle(neg_img_names)
-        neg_img_names = neg_img_names[:original_num]
+        dist_pos = compute_distances_between_embeddings(embeddings_anc, embeddings_pos)
+        dist_neg = compute_distances_between_embeddings(embeddings_anc, embeddings_neg)
 
-        embeddings_pos = [np.squeeze(network(load_img(os.path.join(FACES_PATH, member1, img_name)))) for img_name in pos_img_names]
-        embeddings_neg = [np.squeeze(network(load_img(os.path.join(FACES_PATH, member2, img_name)))) for img_name in neg_img_names]
+        triplet_dists = dist_pos - dist_neg + alpha
 
-        pairwise_dist_pos = compute_pairwise_distance_matrix(embeddings_pos)
-        pairwise_dist_neg = compute_pairwise_distance_matrix_between_2_sets_of_embeddings(embeddings_pos, embeddings_neg)
+        good_triplets = np.nonzero(triplet_dists > 0)[0]
 
-        triplet_dists = np.expand_dims(pairwise_dist_pos, 2) - np.expand_dims(pairwise_dist_neg, 1) + alpha
-
-        index_anch, index_pos, index_neg = np.nonzero(triplet_dists > 0)
-
-        for ia, ip, ine in zip(index_anch, index_pos, index_neg):
-            if ia == ip:
-                continue
-
-            anchor = np.append(anchor, load_img(os.path.join(FACES_PATH, member1, pos_img_names[ia])), axis=0)
-            positive = np.append(positive, load_img(os.path.join(FACES_PATH, member1, pos_img_names[ip])), axis=0)
-            negative = np.append(negative, load_img(os.path.join(FACES_PATH, member2, neg_img_names[ine])), axis=0)
+        for index in good_triplets:
+            anchor = np.append(anchor, load_img(anchorPaths[index]), axis=0)
+            positive = np.append(positive, load_img(positivePaths[index]), axis=0)
+            negative = np.append(negative, load_img(negativePaths[index]), axis=0)
             num -= 1
 
-            if num == 0:
-                return [np.array(anchor), np.array(positive), np.array(negative)]
-        
-        # ----------------------------------
-        # Previous, randomized approach
-        # ----------------------------------
-        # anchor_path, pos_path = random.sample(os.listdir(os.path.join(FACES_PATH, member1)), k=2)
-        # neg_path = random.sample(os.listdir(os.path.join(FACES_PATH, member2)), k=1)[0]
-
-        # candidate_anchor = load_img(os.path.join(FACES_PATH, member1, anchor_path))
-        # candidate_positive = load_img(os.path.join(FACES_PATH, member1, pos_path))
-        # candidate_negative = load_img(os.path.join(FACES_PATH, member2, neg_path))
-
-        # embedding_anchor = network(candidate_anchor)
-        # embedding_positive = network(candidate_positive)
-        # embedding_negative = network(candidate_negative)
-
-        # if (np.linalg.norm(embedding_anchor - embedding_positive) + 0.2 >= np.linalg.norm(embedding_anchor - embedding_negative)):
-        #     anchor = np.append(anchor, candidate_anchor, axis=0)
-        #     positive = np.append(positive, candidate_positive, axis=0)
-        #     negative = np.append(negative, candidate_negative, axis=0)
-        #     num -= 1
+    return [np.array(anchor), np.array(positive), np.array(negative)]
 
 def get_pairs(num_samples):
     left = np.empty((0, 224, 224, 3))
     right = np.empty((0, 224, 224, 3))
     out = np.zeros((0, 1))
 
-    for _ in range(num_samples // 2):
-        member = random.sample(os.listdir(FACES_PATH), k=1)[0]
-        sample_left_path, sample_right_path = random.sample(
-            os.listdir(os.path.join(FACES_PATH, member)), k=2)
-        left_img = load_img(os.path.join(
-            FACES_PATH, member, sample_left_path))
-        right_img = load_img(os.path.join(
-            FACES_PATH, member, sample_right_path))
-
-        left = np.append(left, left_img, axis=0)
-        right = np.append(right, right_img, axis=0)
+    for (leftPath, rightPath) in PAIR_PICKER_HELPER.choosePositivePairs(num_samples // 2):
+        left = np.append(left, load_img(leftPath), axis=0)
+        right = np.append(right, load_img(rightPath), axis=0)
         out = np.append(out, [[1]], axis=0)
 
-    for _ in range(num_samples // 2):
-        member_left, member_right = random.sample(
-            os.listdir(FACES_PATH), k=2)
-        left_img = load_img(
-            os.path.join(FACES_PATH, member_left, random.sample(os.listdir(os.path.join(FACES_PATH, member_left)), k=1)[0]))
-        right_img = load_img(
-            os.path.join(FACES_PATH, member_right, random.sample(os.listdir(os.path.join(FACES_PATH, member_right)), k=1)[0]))
-
-        left = np.append(left, left_img, axis=0)
-        right = np.append(right, right_img, axis=0)
+    for (leftPath, rightPath) in PAIR_PICKER_HELPER.chooseNegativePairs(num_samples // 2):
+        left = np.append(left, load_img(leftPath), axis=0)
+        right = np.append(right, load_img(rightPath), axis=0)
         out = np.append(out, [[0]], axis=0)
 
     return [left, right, out]
