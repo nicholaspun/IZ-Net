@@ -1,5 +1,5 @@
 from keras import backend as K
-from keras.optimizers import Adam
+from keras.optimizers import Adam 
 from keras.models import Model
 from keras.layers import Dense, Input, Layer, Lambda
 
@@ -22,7 +22,8 @@ class TripletLossLayer(Layer):
         self.add_loss(loss)
         return loss
 
-def train_with_triplet_loss(shared_network, num_iterations, num_triplets, save_path):
+def train_with_triplet_loss(
+    shared_network, num_iterations, num_triplets, save_path, optimizer=Adam(clipnorm=1.0, clipvalue=0.5)):
     anchor = Input((224, 224, 3))
     positive = Input((224, 224, 3))
     negative = Input((224, 224, 3))
@@ -35,15 +36,12 @@ def train_with_triplet_loss(shared_network, num_iterations, num_triplets, save_p
         [anchor_encoding, positive_encoding, negative_encoding])
 
     model = Model(inputs=[anchor, positive, negative], outputs=loss_layer)
-
-    opt = Adam(clipnorm=1.0, clipvalue=0.5)
-    model.compile(loss=None, optimizer=opt)
+    model.compile(loss=None, optimizer=optimizer)
 
     training_losses = []
     for i in range(1, num_iterations + 1):
         print('Start iteration {} of {}'.format(i, num_iterations))
         triplets = get_triplets(num_triplets, shared_network)
-        print('Triplets acquired')
         train_loss = model.train_on_batch(triplets, None)
         print('Training Loss: {}'.format(train_loss))
         training_losses.append(train_loss)
@@ -53,7 +51,9 @@ def train_with_triplet_loss(shared_network, num_iterations, num_triplets, save_p
 
     return training_losses
 
-def train_as_siamese_network(shared_network, num_iterations, samples_per_iteration, save_path):
+def train_as_binary_classification_problem(
+    shared_network, num_iterations, samples_per_iteration, save_path, optimizer=Adam(clipnorm=1.0, clipvalue=0.5)):
+
     sample_1 = Input((224, 224, 3))
     sample_2 = Input((224, 224, 3))
 
@@ -65,10 +65,7 @@ def train_as_siamese_network(shared_network, num_iterations, samples_per_iterati
     output = Dense(1, activation='sigmoid')(output)
 
     model = Model(inputs=[sample_1, sample_2], outputs=output)
-
-    opt = Adam(clipnorm=1.0, clipvalue=0.5)
-    model.compile(loss="binary_crossentropy", optimizer=opt,
-                  metrics=['binary_accuracy'])
+    model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=['binary_accuracy'])
 
     training_losses = []
     for i in range(1, num_iterations + 1):
