@@ -1,0 +1,10 @@
+\subsection{Method}
+
+We create our face recognition CNN following a three-step process:
+\begin{enumerate}
+    \item \bf{Creation}: NN1 \cite[Table 1]{facenet}, NN2 \cite[Table 2]{facenet}, Keras InceptionNetV3
+    \item \bf{Training}: We experiment over two different training techniques: Using the triplet loss function and treating the problem as a binary classification problem \cite{deepface}
+    \item \bf{Analysis}: We use a suite of visualizations for analyzing our <blank>: t-distributed stochastic neighbor embedding, boxplot and a table of medoid distances. 
+\end{enumerate}
+
+\cite{tsne_how_to} was quite informative for tweaking the hyperparameters of the TSNE algorithm \inlinecode{python}

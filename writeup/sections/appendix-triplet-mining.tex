@@ -1,0 +1,90 @@
+\section{Triplet Mining (with painfully too much tech)}
+
+In part of training using triplet loss, we must choose appropriate triplets to feed into our network.
+There are countless guides and explanations online for how to produce the so-called \it{semi-hard} and \it{hard} triplets (over the \it{easy} ones).
+But, such is not the focus of this section, instead we are interested in how to choose a uniformly random triplet.
+Clearly, producing every possible triplet and picking from that set is not very kind to a computer's memory, so the goal is to come up with a scheme that allows to avoid this.
+
+Suppose we have $m$ classes $C_1, \ldots, C_m$, not all necessarily the same size.
+For convenience, define $\mathscr{C}_i = \bigcup_{\substack{k \neq i \\ k \in \{1, \ldots m\}}} C_k$.
+Consider the following selection scheme:
+
+\begin{algorithm}
+    \caption{Uniform Triplet Mining (Take 1)}\label{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-one}
+
+    \nl Select $i, j \longleftarrow {1, \ldots m}$ uniformly at random (just select one and then the other here). $i$ is the index of the class that will become the anchor
+
+    \nl Select an random pair of objects in $C_i$ and a random object from $C_j$
+\end{algorithm}
+
+Seems simple enough and also not actually uniformly random.
+This becomes apparent with a small example: 
+
+\begin{changemargin}{1cm}{1cm}
+Say $C_1 = \{\Gamma, \Lambda\}$ and $C_2 = \{\star, \Diamond, \Box\}$.
+There are a total of $9$ different triplets and more importantly the pair $(\Gamma, \Lambda)$ participates in $3$ of them.
+However, using \Cref{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-one} above, we have a $100\%$ chance of selecting $(\Gamma, \Lambda)$ once we choose $C_1$ as the anchor, which happen $50\%$ of the time.
+As such, the triplets involving the pair $(\Gamma, \Lambda)$ are represented $50\%$ of the time under this scheme, which is not the $\frac{3}{9} \approx 33.33\%$ we calculated above!
+\end{changemargin}
+
+There are two issues with \Cref{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-one} above:
+\begin{enumerate}
+    \item The selection of $j$ is unnecessary: once a pair has been chosen from $C_i$, the remaining elements in $\mathscr{C}_i$ are all uniformly represented.
+    
+    So, we only need to choose $i$, select a pair from $C_i$ and then select an object uniformly at random from $\mathscr{C}_i$
+
+    \item We cannot assign a uniform distribution to the indices $\{1, \ldots, m\}$.
+    Referring back to our example above, note that $C_2$ produces $3$ distinct pairs while $C_1$ only produces $1$.
+    Intuitively, this means we should select $C_2$ as the anchor more often (in particular, three times as often) so that each pair within the class is equally represented.
+
+    Indeed, let $\mathcal{C} = \binom{C_1}{2} + \ldots \binom{C_m}{2}$.
+    Then, set the probability of choosing $C_i$ as the anchor class to be $\frac{\binom{C_i}{2}}{\mathcal{C}}$.
+\end{enumerate}
+
+These two modifications give us the following:
+
+\begin{algorithm}
+    \caption{Uniform Triplet Mining (Take 2)}\label{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-two}
+
+    \nl Select $C_i$ as the anchor class with probability $\frac{\binom{C_i}{2}}{\mathcal{C}}$
+
+    \nl Select (uniformly at random) a pair of objects from $C_i$ and (again, uniformly at random) an object from $\mathscr{C}_i$
+\end{algorithm}
+
+It remains to figure out how to actually perform the first step of \Cref{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-two}.
+To do this, we use a data structure known as a Segment Tree \footnote{See \href{https://github.com/nicholaspun/IZ-Net/blob/master/faceRecognition/SegmentTree.py}{\inlinecode{SegmentTree.py}}}.
+We'll leave the details of the data structure for the reader to explore, but in summary:
+\begin{itemize}
+    \item A Segment Tree \tt{T} is created from a set of intervals (over $\R$)
+    \item Given a point $\tt{v} \in \R$, the operation \tt{Find(T, v)} returns a list of intervals from \tt{T} containing \tt{v}
+\end{itemize}
+
+We will find that our particular implementation of the Segment Tree is very specialized: we require the intervals to be disjoint and to complete the real line.
+
+With the preparatory work out of the way, we now describe our strategy for choosing the anchor class:
+\begin{enumerate}
+    \item Compute the probabilities for each $C_i$. For convenience, we'll denote these with $p_i$ so we don't have to repeatedly write out the fraction.
+
+    \item Give each $C_i$ an interval from $[0, 1)$. This is easy: give $C_1$ the interval $[0, p_1)$, give $C_2$ the interval $[p_1, p_1 + p_2)$, and so on.
+    
+    Note that $\sum_{i = 1}^m p_i = 1$, so $C_m$ is given the interval $[p_1 + \ldots + p_{m-1}, 1)$, completing the interval $[0, 1)$
+
+    \item Create a Segment Tree \tt{T} from these intervals.
+    Note that we cheat a bit here and give $C_1$ the interval $(-\infty, p_1)$ and $C_m$ the interval $[p_1 + \ldots + p_{m-1}, \infty)$.
+    This does not affect the probabilities, it is only an consequence of implementation.
+\end{enumerate}
+
+Now, pick a random number between $\tt{v} \in [0,1]$ (say, using the \href{https://docs.python.org/3/library/random.html}{\inlinecode{random}} module in Python).
+The operation \tt{Find(T, v)} will return exactly one interval, and each interval corresponds to exactly one class.
+As such, \tt{Find(T, v)} selects classes according to the probability distribution we've defined!
+
+This completes \Cref{Algorithm:appendix-triplet-mining:uniform-triplet-mining-take-two}.
+We end the section with two remarks:
+\begin{enumerate}
+    \item As the section title suggests, is painfully too much tech to choose triplets.
+    For the most part, with large enough datasets and close-to-equal distribution of objects between the classes, these steps can be safely ignored.
+    Not using such tooling will skew the data distribution a tad bit, but the effect on the probabilities will be by very \it{very} small fractional amounts.
+
+    \item We employ a similar strategy for choosing pairs for binary classification, which can be found in \href{https://github.com/nicholaspun/IZ-Net/blob/master/faceRecognition/PairPickerHelper.py}{\inlinecode{PairPickerHelper.py}}.
+    The code for triplet picking can be found in \href{https://github.com/nicholaspun/IZ-Net/blob/master/faceRecognition/TripletPickerHelper.py}{\inlinecode{TripletPickerHelper.py}}
+\end{enumerate}

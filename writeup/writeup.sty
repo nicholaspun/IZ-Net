@@ -17,6 +17,9 @@
 \RequirePackage[ruled, vlined]{algorithm2e}
 \RequirePackage{cleveref}
 \RequirePackage{tocloft}
+\RequirePackage{tcolorbox}
+\RequirePackage[titletoc]{appendix}
+\RequirePackage{mathrsfs}
 
 % Make own title
 \makeatletter
@@ -46,6 +49,7 @@
 \DeclareMathOperator{\N}{\mathbb{N}} % Naturals
 \DeclareMathOperator{\Q}{\mathbb{Q}} % Rationals
 \DeclareMathOperator{\F}{\mathbb{F}} % Field
+\DeclareMathOperator{\R}{\mathbb{R}} % Reals
 
 % Theorems
 \newtheorem{theorem}{Theorem}
@@ -72,6 +76,7 @@
 % Aliases
 \renewcommand{\it}{\textit}
 \renewcommand{\bf}{\textbf}
+\renewcommand{\tt}{\texttt}
 \newcommand{\ul}{\underline}
 
 % ToC
@@ -94,4 +99,17 @@
     \par    
 }{}
 \renewcommand{\cftmystitlefont}{\normalfont\Large}
+
+\newtcbox{\inlinecode}{on line, boxrule=0pt, boxsep=0pt, top=2pt, left=2pt, bottom=2pt, right=2pt, colback=gray!10, colframe=white, fontupper={\footnotesize\ttfamily}}
+
+\newenvironment{changemargin}[2]{%
+  \begin{list}{}{%
+    \setlength{\topsep}{0pt}%
+    \setlength{\leftmargin}{#1}%
+    \setlength{\rightmargin}{#2}%
+    \setlength{\listparindent}{\parindent}%
+    \setlength{\itemindent}{\parindent}%
+    \setlength{\parsep}{\parskip}%
+  }%
+  \item[]}{\end{list}}
 

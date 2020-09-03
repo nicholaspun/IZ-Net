@@ -2,27 +2,20 @@
 
 \usepackage{writeup}
 
-\title{IZ*Net Writeup}
+\title{IZ*Net}
 \author{Nicholas Pun}
-
-\usepackage{blindtext}
-
 
 \begin{document}
 \maketitle
 {\small \tableofcontents}
-{\small \listofmystery}
+% {\small \listofmystery}
  
-\section{Introduction}
-\input{sections/introduction.tex}
+\input{sections/introduction}
+\input{sections/face-recognition/face-recognition}
 
-\blindtext[15]
-
-
-\begin{mystery}{bloops}
-    yorp
-\end{mystery}
-
+\begin{appendices}
+    \input{sections/appendix-triplet-mining}
+\end{appendices}
 
 \clearpage
 \nocite{*}
