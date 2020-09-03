@@ -1,6 +1,6 @@
-class IntervalTree:
+class SegmentTree:
   '''
-  A specialized Interval Tree that assumes we are given intervals of the form: 
+  A specialized Segment Tree that assumes we are given intervals of the form: 
   (-\infty, a_1), [a_1, a_2), ..., [a_n, \infty)
   '''
   def __init__(self, key, leftChild, rightChild):
@@ -13,28 +13,28 @@ class IntervalTree:
   intervals can be given as an array of numbers.
   '''
   @staticmethod
-  def createIntervalTreeFromIntervals(intervals, leafNames):
+  def createSegmentTreeFromIntervals(intervals, leafNames):
     if len(intervals) == 3:
-      return IntervalTree(intervals[1], leafNames[0], leafNames[1])
+      return SegmentTree(intervals[1], leafNames[0], leafNames[1])
 
     midpoint = len(intervals) // 2
     if (len(intervals) % 2 == 0):
       key = (intervals[midpoint] + intervals[midpoint - 1]) / 2
-      return IntervalTree(
+      return SegmentTree(
         key,
-        IntervalTree.createIntervalTreeFromIntervals(intervals[:midpoint] + [key], leafNames[:midpoint]),
-        IntervalTree.createIntervalTreeFromIntervals([key] + intervals[midpoint:], leafNames[midpoint - 1:])
+        SegmentTree.createSegmentTreeFromIntervals(intervals[:midpoint] + [key], leafNames[:midpoint]),
+        SegmentTree.createSegmentTreeFromIntervals([key] + intervals[midpoint:], leafNames[midpoint - 1:])
       )
     else:
-      return IntervalTree(
+      return SegmentTree(
         intervals[midpoint],
-        IntervalTree.createIntervalTreeFromIntervals(intervals[:midpoint + 1], leafNames[:midpoint]),
-        IntervalTree.createIntervalTreeFromIntervals(intervals[midpoint:], leafNames[midpoint:])
+        SegmentTree.createSegmentTreeFromIntervals(intervals[:midpoint + 1], leafNames[:midpoint]),
+        SegmentTree.createSegmentTreeFromIntervals(intervals[midpoint:], leafNames[midpoint:])
       )
 
   @staticmethod
   def printTree(tree):
-    print(IntervalTree.__printTree(tree, 0))
+    print(SegmentTree.__printTree(tree, 0))
 
   # ignore the style of this function :)
   @staticmethod
@@ -42,14 +42,14 @@ class IntervalTree:
     if isinstance(tree, str):
       return tree
 
-    res = "IntervalTree({}, {}{}{}, {}{}{})".format(
+    res = "SegmentTree({}, {}{}{}, {}{}{})".format(
       tree.key,
       "" if isinstance(tree.leftChild, str) else "\n",
       "" if isinstance(tree.leftChild, str) else "  " * (level + 1),
-      IntervalTree.__printTree(tree.leftChild, level + 1),
+      SegmentTree.__printTree(tree.leftChild, level + 1),
       "" if isinstance(tree.rightChild, str) else "\n",
       "" if isinstance(tree.rightChild, str) else "  " * (level + 1),
-      IntervalTree.__printTree(tree.rightChild, level + 1),
+      SegmentTree.__printTree(tree.rightChild, level + 1),
       "  " * level
     )
 
@@ -67,12 +67,12 @@ class IntervalTree:
   
 
 # Testing!
-# IntervalTree.printTree(IntervalTree.createIntervalTreeFromIntervals([1,2,3,4,5,6,7,8,9, 10,11,12], ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']))
-# IntervalTree.printTree(IntervalTree.createIntervalTreeFromIntervals([1,2,3], ['a', 'b']))
-# IntervalTree.printTree(IntervalTree.createIntervalTreeFromIntervals([1,2,3,4], ['a', 'b', 'c']))
-# IntervalTree.printTree(IntervalTree.createIntervalTreeFromIntervals([1,2,3,4,5], ['a', 'b', 'c', 'd']))
+# SegmentTree.printTree(SegmentTree.createSegmentTreeFromIntervals([1,2,3,4,5,6,7,8,9, 10,11,12], ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']))
+# SegmentTree.printTree(SegmentTree.createSegmentTreeFromIntervals([1,2,3], ['a', 'b']))
+# SegmentTree.printTree(SegmentTree.createSegmentTreeFromIntervals([1,2,3,4], ['a', 'b', 'c']))
+# SegmentTree.printTree(SegmentTree.createSegmentTreeFromIntervals([1,2,3,4,5], ['a', 'b', 'c', 'd']))
 
-# testTree = IntervalTree.createIntervalTreeFromIntervals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'])
+# testTree = SegmentTree.createSegmentTreeFromIntervals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'])
 # print(testTree.find(5) == 'e')
 # print(testTree.find(0) == 'a')
 # print(testTree.find(13) == 'k')

@@ -7,7 +7,7 @@ import time
 
 from consts import ALL_MEMBERS, FACES_PATH
 from Distribution import Distribution
-from IntervalTree import IntervalTree
+from SegmentTree import SegmentTree
 
 def countPairs(imgs):
     return len(imgs) * (len(imgs) - 1) * 0.5
@@ -18,7 +18,7 @@ class TripletPickerHelper:
         memberProbabilities = Distribution.normalizeDistribution(imageDistribution)
         memberIntervals = Distribution.distributionToIntervals(memberProbabilities)
 
-        self.memberIntervalTree = IntervalTree.createIntervalTreeFromIntervals(memberIntervals, ALL_MEMBERS)
+        self.memberSegmentTree = SegmentTree.createSegmentTreeFromIntervals(memberIntervals, ALL_MEMBERS)
         self.memberPaths = { 
             member: [os.path.join(FACES_PATH, member, imgName) for imgName in os.listdir(os.path.join(FACES_PATH, member))] 
             for member in ALL_MEMBERS }
@@ -31,7 +31,7 @@ class TripletPickerHelper:
         negatives = []
 
         for _ in range(amount):
-            memberAnchor = self.memberIntervalTree.find(random.random())
+            memberAnchor = self.memberSegmentTree.find(random.random())
             memberAnchorSamples = random.sample(self.memberPaths[memberAnchor], k=2)
             anchors.append(memberAnchorSamples[0])
             positives.append(memberAnchorSamples[1])
@@ -55,8 +55,8 @@ class PairPickerHelper:
         negativePairsProbabilities = Distribution.normalizeDistribution(negativePairsDistribution)
         negativePairsIntervals = Distribution.distributionToIntervals(negativePairsProbabilities)
 
-        self.positivePairsIntervalTree = IntervalTree.createIntervalTreeFromIntervals(positivePairIntervals, ALL_MEMBERS)
-        self.negativePairsIntervalTree = IntervalTree.createIntervalTreeFromIntervals(negativePairsIntervals, ALL_MEMBERS)
+        self.positivePairsSegmentTree = SegmentTree.createSegmentTreeFromIntervals(positivePairIntervals, ALL_MEMBERS)
+        self.negativePairsSegmentTree = SegmentTree.createSegmentTreeFromIntervals(negativePairsIntervals, ALL_MEMBERS)
         self.memberPaths = {
             member: [os.path.join(FACES_PATH, member, imgName) for imgName in os.listdir(os.path.join(FACES_PATH, member))]
             for member in ALL_MEMBERS }
@@ -66,7 +66,7 @@ class PairPickerHelper:
     def choosePositivePairs(self, amount):
         pairs = []
         for _ in range(amount):
-            member = self.positivePairsIntervalTree.find(random.random())
+            member = self.positivePairsSegmentTree.find(random.random())
             memberSamples = random.sample(self.memberPaths[member], k = 2)
             pairs.append((memberSamples[0], memberSamples[1]))
         
@@ -75,7 +75,7 @@ class PairPickerHelper:
     def chooseNegativePairs(self, amount):
         pairs = []
         for _ in range(amount):
-            firstMember = self.negativePairsIntervalTree.find(random.random())
+            firstMember = self.negativePairsSegmentTree.find(random.random())
             firstMemberSample = random.sample(self.memberPaths[firstMember], k = 1)[0]
             secondMemberSample = random.sample(self.memberPathsComplements[firstMember], k = 1)[0]
             pairs.append((firstMemberSample, secondMemberSample))
