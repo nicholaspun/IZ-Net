@@ -20,6 +20,7 @@
 \RequirePackage{tcolorbox}
 \RequirePackage[titletoc]{appendix}
 \RequirePackage{mathrsfs}
+\RequirePackage{caption}
 
 % Make own title
 \makeatletter
@@ -52,19 +53,14 @@
 \DeclareMathOperator{\R}{\mathbb{R}} % Reals
 
 % Theorems
-\newtheorem{theorem}{Theorem}
-\newtheorem{proposition}{Proposition}
-\newtheorem{lemma}{Lemma}
-\newtheorem{claim}{Claim}
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{proposition}{Proposition}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{claim}{Claim}
 
-\theoremstyle{definition}
-\newtheorem{example}{Example}
-\newtheorem*{remark}{Remark}
-
-\RequirePackage{caption}
-% \DeclareCaptionFont{white}{\color{white}}
-% \DeclareCaptionFormat{listing}{\colorbox[cmyk]{0.43, 0.35, 0.35,0.01}{\parbox{\textwidth}{\hspace{15pt}#1#2#3}}}
-\captionsetup[lstlisting]{font=bf}
+% \theoremstyle{definition}
+% \newtheorem{example}{Example}
+% \newtheorem*{remark}{Remark}
 
 % Algorithm2e keywords
 \SetKwInput{KwInput}{Input}
@@ -85,23 +81,8 @@
 \renewcommand{\cftsecfont}{\normalfont}
 \renewcommand{\cftsecpagefont}{\normalfont}
 
-% List of Mysteries
-\newcommand{\listmysteryname}{List of Mysteries}
-\newlistof[section]{mystery}{mys}{\listmysteryname}
-\newenvironment{mystery}[1]{
-    \refstepcounter{mystery}
-    \par\noindent
-    \textbf{Mystery \themystery:}
-    \textit{\ifx\newenvironment#1\newenvironment\else(#1)\fi}
-    \addcontentsline{mys}{mystery}{
-        \protect\numberline{\themystery}\space#1
-    }
-    \par    
-}{}
-\renewcommand{\cftmystitlefont}{\normalfont\Large}
-
+% Custom Environments
 \newtcbox{\inlinecode}{on line, boxrule=0pt, boxsep=0pt, top=2pt, left=2pt, bottom=2pt, right=2pt, colback=gray!10, colframe=white, fontupper={\footnotesize\ttfamily}}
-
 \newenvironment{changemargin}[2]{%
   \begin{list}{}{%
     \setlength{\topsep}{0pt}%
