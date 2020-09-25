@@ -9,7 +9,7 @@
 \RequirePackage{amsmath, amssymb, amsthm}
 \RequirePackage{mathtools}
 \RequirePackage{listings}
-\RequirePackage{hyperref}
+\RequirePackage[hidelinks]{hyperref}
 \RequirePackage[margin=1in]{geometry}
 \RequirePackage{enumitem}
 \RequirePackage{parskip}
@@ -21,14 +21,17 @@
 \RequirePackage[titletoc]{appendix}
 \RequirePackage{mathrsfs}
 \RequirePackage{caption}
+\RequirePackage{subcaption}
+\RequirePackage{tikz}
+\RequirePackage{lscape}
 
 % Make own title
 \makeatletter
 \renewcommand{\maketitle}{
     \begin{center}
-        {\Large \@title} \\
+        {\Large\bf \@title} \\
         \vspace{3mm}
-        {\large \@author}
+        {\@author}
     \end{center}
 }
 \makeatother
@@ -52,15 +55,11 @@
 \DeclareMathOperator{\F}{\mathbb{F}} % Field
 \DeclareMathOperator{\R}{\mathbb{R}} % Reals
 
-% Theorems
-% \newtheorem{theorem}{Theorem}
-% \newtheorem{proposition}{Proposition}
-% \newtheorem{lemma}{Lemma}
-% \newtheorem{claim}{Claim}
-
-% \theoremstyle{definition}
-% \newtheorem{example}{Example}
-% \newtheorem*{remark}{Remark}
+% -- Tikz Options -- %
+\usetikzlibrary{arrows.meta, shapes, positioning}
+\tikzset{vertex/.style = {shape=rectangle, font=\small, text width=2cm, align=center}}
+\tikzset{edgeText/.style = {shape=ellipse, fill=white, align=center, inner sep=0pt, font=\footnotesize}}
+\tikzset{edge/.style = {->, > = stealth, shorten > = 1pt, thick, -{Stealth[length=3mm,width=3mm]}}}
 
 % Algorithm2e keywords
 \SetKwInput{KwInput}{Input}
@@ -75,6 +74,20 @@
 \renewcommand{\tt}{\texttt}
 \newcommand{\ul}{\underline}
 
+% Members
+\newcommand{\Eunbi}{\it{Eunbi}}
+\newcommand{\Sakura}{\it{Sakura}}
+\newcommand{\Hyewon}{\it{Hyewon}}
+\newcommand{\Yena}{\it{Yena}}
+\newcommand{\Chaeyeon}{\it{Chaeyeon}}
+\newcommand{\Chaewon}{\it{Chaewon}}
+\newcommand{\Minju}{\it{Minju}}
+\newcommand{\Nako}{\it{Nako}}
+\newcommand{\Hitomi}{\it{Hitomi}}
+\newcommand{\Yuri}{\it{Yuri}}
+\newcommand{\Yujin}{\it{Yujin}}
+\newcommand{\Wonyoung}{\it{Wonyoung}}
+
 % ToC
 \renewcommand{\cfttoctitlefont}{\normalfont\Large}
 \renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
@@ -82,7 +95,7 @@
 \renewcommand{\cftsecpagefont}{\normalfont}
 
 % Custom Environments
-\newtcbox{\inlinecode}{on line, boxrule=0pt, boxsep=0pt, top=2pt, left=2pt, bottom=2pt, right=2pt, colback=gray!10, colframe=white, fontupper={\footnotesize\ttfamily}}
+\newtcbox{\inlinecode}{on line, boxrule=0pt, boxsep=0pt, top=2pt, left=2pt, bottom=2pt, right=2pt, colback=gray!10, colframe=white, fontupper={\small\ttfamily}}
 \newenvironment{changemargin}[2]{%
   \begin{list}{}{%
     \setlength{\topsep}{0pt}%

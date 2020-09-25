@@ -1,0 +1,35 @@
+\subsection{Closing Remarks}\label{Section:Face-Recognition:Remarks}
+
+I'll adopt a more casual tone for this subsection.
+This is here since I wanted one more section to reflect on this portion of the project before moving on.
+There were a couple things that didn't quite fit into the discussion and analysis in \Cref{Section:Face-Recognition:Results} but that I still wanted to mention.
+
+I'll start off by saying that overall, the training of the face recognition model went well and without too many errors.
+However, looking back, here's what I would improve:
+\begin{enumerate}[left=0pt]
+\item \bf{Develop an accuracy metric}
+
+While the three tools were useful in determining clustering of the image embeddings, they weren't quite grounded in mathematics.
+(Or rather, my analysis using the tools were more descriptive than mathematical)
+The best conclusions I could draw about the trained models were that ``it looks like we're doing pretty well'' or ``there's a couple overlapping clusters here, that's bad!''.
+It would be much easier to compare between models if we looked towards an accuracy metric.
+A possible metric that I thought of is to look at classification accuracy.
+(There's some problems with this as the representative embedding for a member could possibly change as the model trains)
+I'm sure that there are better metrics if I gave this a quick Google search.
+
+\item \bf{Split data into training/dev/test sets}
+
+I actually had the data split as I was scraping for data but merged them near the end since I felt the training set wasn't large enough.
+I'm fairly sure the models have overfit a bit since in testing the final system we get quite a lot of errors, contrary to what our 3 tools tell us about the accuracy of the model.
+
+Overall this and the previous remark is just to develop better experimenting procedures that will lead to more controlled experiments.
+
+\item \bf{Fix NN1} 
+
+This is not really an improvement for future projects but something that had me stuck a bit during the creation of NN1.
+The architecture is not built as specified in \cite{facenet}.
+In particular, I had trouble understanding the \tt{fc1} and \tt{fc2} layers, even after reading \cite{maxout}.
+To my understanding, the Maxout layer was supposed to be an activation function, but their usage made it slightly confusing and it didn't seem like anyone had implemented this particular architecture on the internet. 
+I ended with doing something completely random that include a \tt{max} function.
+(Now that I think about this, maybe this is why my 2nd experiment had funky results \ldots)
+\end{enumerate}
