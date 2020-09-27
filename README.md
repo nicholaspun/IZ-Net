@@ -3,17 +3,17 @@
 IZ*Net is the definitive way to differentiate between the Jo Yuriz trio!
 
 <div style="text-align: center">
-    <img src="images/chaewon-incorrect.png" width="300"/>
-    <img src="images/yena-incorrect.png" width="300"/>
-    <img src="images/yuri-incorrect.png" width="300"/>
+    <img src="images/chaewon-incorrect.png" width="250"/>
+    <img src="images/yena-incorrect.png" width="250"/>
+    <img src="images/yuri-incorrect.png" width="250"/>
 </div>
 
 Ok, the astute WIZ*One will notice that I have mislabelled all three girls, so let's try again:
 
 <div style="text-align: center">
-    <img src="images/chaewon-correct.png" width="300"/>
-    <img src="images/yena-correct.png" width="300"/>
-    <img src="images/yuri-correct.png" width="300"/>
+    <img src="images/chaewon-correct.png" width="250"/>
+    <img src="images/yena-correct.png" width="250"/>
+    <img src="images/yuri-correct.png" width="250"/>
 </div>
 
 Much better!
