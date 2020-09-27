@@ -1,0 +1,33 @@
+\section{Building the IZ*Net System}\label{Section:Building-the-IZNet-System}
+
+We briefly go over how to build the final system, which one can find \href{}{\inlinecode{TODO}}
+Recall that in \Cref{Section:Introductin}, we went over three steps for IZ*Net:
+\begin{enumerate}
+    \item Detect and extract faces from the input image using the face detection model
+    \item Label each individual face using the face recognition model
+    \item Produce an output image where each extracted face is labeled with a red box and name.
+\end{enumerate}
+
+For the first step, the face detection model we build in \Cref{Section:Face-Detection} produces $338$ bounding boxes ($13 \times 13 \times 2$).
+But, of course, not all of these have a high confidence score and many of these may overlap.
+To deal with the overlap, we run the boxes through the built-in \it{non-max suppression} algorithm\footnote{See \url{https://www.tensorflow.org/api_docs/python/tf/image/non_max_suppression}} with an IOU threshold of $0.4$.
+What remains are $12$ (since there will at most be $12$ members to detect in an image) bounding boxes with low overlap but some may still have low confidence scores.
+We set the confidence score threshold to be $0.3$ and this usually gives us at least one correct bounding box.
+This completes detection and extraction.
+
+For the 2nd step, recall that when analyzing the face recognition model, we found the medoids of the cluster for each member.
+We use the medoid as the representative image embedding for each member.
+Other choices were considered as well (but weren't implemented out of project fatigue):
+\begin{itemize}
+    \item Use the centroid instead of the medoid.
+    This may produce better results if each cluster consists of many mini-clusters, in which case, the medoid would be a poor representative of every mini-cluster.
+
+    \item Use $k$-means clustering to find $k$ centroids that form a \it{set} of representative image embeddings.
+    From here, we can label an image by comparing its embedding with the each set and pick the one with minimum total distance or admits the most embeddings with small distances.
+\end{itemize}
+For our implementation however, the label is the representative embedding with lowest Euclidean distance to our image embedding.
+This completes the labelling step.
+
+Finally, to produce the final image, this is just Python magic.
+
+This completes the IZ*Net System!

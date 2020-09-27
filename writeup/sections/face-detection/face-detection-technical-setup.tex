@@ -1,0 +1,19 @@
+\subsection{Technical Setup}
+
+The YOLO paper \cite{YOLO} uses $7\times7\times30$ tensors, where the $30$ includes both the confidences for the bounding boxes as well as class predictions.
+We specialize this setup slightly since class predictions will not be necessary here (this job is left for the face recognition model).
+We also increase the size of the prediction to $13\times13$
+To that end, our predictions end up as $13\times13\times2\times5$ tensors.
+We use $2$ bounding boxes: the first specializes to a 1-by-1 anchor box and the second specializes to a 1-by-$1.15$ anchor box.
+And the last dimension consists of the confidence and the $4$ coordinates specifying the bounding box.
+
+We choose Darknet-53 \cite[Table 1]{YOLOv3} as our architecture.
+This choice is completely arbitrary (well, not \it{completely}, it worked well in the paper, and hence we figure it would work well here).
+We could very well have also experimented with different architectures here, but felt that the implementation of the loss function was the main learning opportunity here.
+
+The parameters $\lambda_{coord}$ and $\lambda_{noobj}$ were also adjusted---the former ended up as $25$ in training of our best model and the latter remained at 0.5.
+Otherwise, the remainder of the technical aspects remain the same or very similar to the three papers.
+
+Finally, to generate our true bounding boxes, we once again use a pretrained model along with OpenCV.
+This time, we don't extract out the faces, but rather encode them into the desired $13 \times 13 \times 2 \times 5$ tensor.
+To choose the anchor box, we assign the bounding box to the one with the closest aspect ratio.
