@@ -31,4 +31,5 @@ If you'd like to look at code:
     - `FaceRecognition.ipynb` - Develops the face recognition model
     - `IZ_NET.ipynb` - Develops the final system
     - `ObjectDetectionTest.ipynb` - Develops a rectangle detection model (used this to make sure I had implemented YOLO correctly)
+- `misc` - Miscellaneous files (face/bounding box extraction scripts, scraper script, etc.)
 - `writeup` - All my LaTeX files, if for whatever reason you wanted to look at that
